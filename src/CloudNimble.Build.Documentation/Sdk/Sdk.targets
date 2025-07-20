@@ -13,6 +13,7 @@
     <Target Name="ValidateDocumentationProject" AfterTargets="Build">
         <Message Text="✅ Documentation project: $(MSBuildProjectName)" Importance="high" />
         <Message Text="📄 Documentation type: $(DocumentationType)" Importance="high" />
+        <Message Text="📂 Documentation root: $(DocumentationRoot)" Importance="high" Condition="'$(DocumentationRoot)' != '$(MSBuildProjectDirectory)\'" />
         <Message Text="📁 Output redirected to: $(OutputPath)" Importance="normal" Condition="'$(KeepLocalOutput)' != 'true'" />
         <Message Text="📁 Output kept local" Importance="normal" Condition="'$(KeepLocalOutput)' == 'true'" />
     </Target>
@@ -70,7 +71,8 @@
         <Message Text="🚀 Generating Mintlify documentation..." Importance="high" />
         
         <!-- Only run if EasyAF.Tools is available -->
-        <Exec Command="dotnet easyaf mintlify generate -o $(MSBuildProjectDirectory)"
+        <Exec Command="dotnet easyaf mintlify generate"
+              WorkingDirectory="$(DocumentationRoot)"
               ContinueOnError="true"
               IgnoreExitCode="false"
               Condition="'$(EasyAFToolsInstalled)' == 'true'" />
@@ -87,7 +89,7 @@
             AfterTargets="Build">
         <Message Text="🔍 Linting Markdown files..." Importance="high" />
         <Exec Command="markdownlint **/*.md"
-              WorkingDirectory="$(MSBuildProjectDirectory)"
+              WorkingDirectory="$(DocumentationRoot)"
               ContinueOnError="true"
               IgnoreExitCode="true" />
     </Target>
@@ -109,35 +111,35 @@
 
         <!-- Mintlify preview -->
         <Exec Command="mint dev"
-              WorkingDirectory="$(MSBuildProjectDirectory)"
+              WorkingDirectory="$(DocumentationRoot)"
               ContinueOnError="true"
               IgnoreExitCode="true"
               Condition="'$(DocumentationType)' == 'Mintlify'" />
 
         <!-- DocFX preview -->
         <Exec Command="docfx --serve"
-              WorkingDirectory="$(MSBuildProjectDirectory)"
+              WorkingDirectory="$(DocumentationRoot)"
               ContinueOnError="true"
               IgnoreExitCode="true"
               Condition="'$(DocumentationType)' == 'DocFX'" />
 
         <!-- MkDocs preview -->
         <Exec Command="mkdocs serve"
-              WorkingDirectory="$(MSBuildProjectDirectory)"
+              WorkingDirectory="$(DocumentationRoot)"
               ContinueOnError="true"
               IgnoreExitCode="true"
               Condition="'$(DocumentationType)' == 'MkDocs'" />
 
         <!-- Jekyll preview -->
         <Exec Command="bundle exec jekyll serve"
-              WorkingDirectory="$(MSBuildProjectDirectory)"
+              WorkingDirectory="$(DocumentationRoot)"
               ContinueOnError="true"
               IgnoreExitCode="true"
               Condition="'$(DocumentationType)' == 'Jekyll'" />
 
         <!-- Hugo preview -->
         <Exec Command="hugo server"
-              WorkingDirectory="$(MSBuildProjectDirectory)"
+              WorkingDirectory="$(DocumentationRoot)"
               ContinueOnError="true"
               IgnoreExitCode="true"
               Condition="'$(DocumentationType)' == 'Hugo'" />
@@ -160,7 +162,7 @@
 
         <!-- Mintlify deployment -->
         <Exec Command="mint deploy"
-              WorkingDirectory="$(MSBuildProjectDirectory)"
+              WorkingDirectory="$(DocumentationRoot)"
               ContinueOnError="true"
               IgnoreExitCode="false"
               Condition="'$(DocumentationType)' == 'Mintlify'" />
@@ -178,10 +180,10 @@
         <Message Text="📊 Documentation Statistics:" Importance="high" />
 
         <ItemGroup>
-            <MarkdownFiles Include="**/*.md" />
-            <MarkdownFiles Include="**/*.mdx" />
-            <MarkdownFiles Include="**/*.mdz" />
-            <ImageFiles Include="**/*.png;**/*.jpg;**/*.jpeg;**/*.gif;**/*.svg" />
+            <MarkdownFiles Include="$(DocumentationRoot)**/*.md" />
+            <MarkdownFiles Include="$(DocumentationRoot)**/*.mdx" />
+            <MarkdownFiles Include="$(DocumentationRoot)**/*.mdz" />
+            <ImageFiles Include="$(DocumentationRoot)**/*.png;$(DocumentationRoot)**/*.jpg;$(DocumentationRoot)**/*.jpeg;$(DocumentationRoot)**/*.gif;$(DocumentationRoot)**/*.svg" />
         </ItemGroup>
 
         <Message Text="   📄 Documentation type: $(DocumentationType)" Importance="high" />
@@ -214,6 +216,7 @@
         <Message Text="" Importance="high" />
         <Message Text="Current Configuration:" Importance="high" />
         <Message Text="  Documentation Type: $(DocumentationType)" Importance="high" />
+        <Message Text="  Documentation Root: $(DocumentationRoot)" Importance="high" />
         <Message Text="  Output Location: $(OutputPath)" Importance="high" />
         <Message Text="  Keep Local Output: $(KeepLocalOutput)" Importance="high" />
         <Message Text="  EasyAF.Tools Available: $(EasyAFToolsInstalled)" Importance="high" />

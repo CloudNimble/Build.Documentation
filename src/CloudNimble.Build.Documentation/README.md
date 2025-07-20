@@ -94,6 +94,28 @@ The SDK automatically detects your documentation type based on configuration fil
 </Project>
 ```
 
+### Separate Documentation Location
+
+If your `.docsproj` file is in a different location than your documentation files (e.g., project in `src/` but docs in `docs/`), use the `DocumentationRoot` property:
+
+```xml
+<Project Sdk="CloudNimble.Build.Documentation/1.0.0">
+  <PropertyGroup>
+    <!-- Point to where your documentation files actually live -->
+    <DocumentationRoot>$(MSBuildThisFileDirectory)..\..\docs\</DocumentationRoot>
+    
+    <!-- All features work with the specified root -->
+    <GenerateMintlifyDocs>true</GenerateMintlifyDocs>
+    <ShowDocumentationStats>true</ShowDocumentationStats>
+  </PropertyGroup>
+</Project>
+```
+
+This is particularly useful when you want to:
+- Keep your `.docsproj` file with other project files in the `src/` folder
+- Have all documentation content in a separate `docs/` folder at the repository root
+- Maintain a clean separation between code and documentation
+
 ## Available Build Targets
 
 | Target | Description |
