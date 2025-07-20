@@ -1,0 +1,195 @@
+<Project>
+    <!-- ============================================================================
+       CloudNimble.Build.Documentation SDK - Props
+       
+       Provides MSBuild SDK support for documentation projects (.docsproj)
+       Enables documentation files to be included in Visual Studio solutions
+       without compilation overhead or bin/obj folder creation.
+       ============================================================================ -->
+
+    <PropertyGroup>
+        <!-- Documentation project marker -->
+        <IsDocumentationProject>true</IsDocumentationProject>
+        <UsingCloudNimbleDocumentationSdk>true</UsingCloudNimbleDocumentationSdk>
+
+        <!-- Inherit from NoTargets SDK for no-compile behavior -->
+        <UsingMicrosoftNoTargetsSdk>true</UsingMicrosoftNoTargetsSdk>
+
+        <!-- Default target framework -->
+        <TargetFramework Condition="'$(TargetFramework)' == ''">net8.0</TargetFramework>
+
+        <!-- Disable packaging and publishing by default -->
+        <IsPackable Condition="'$(IsPackable)' == ''">false</IsPackable>
+        <IsPublishable Condition="'$(IsPublishable)' == ''">false</IsPublishable>
+        <GeneratePackageOnBuild Condition="'$(GeneratePackageOnBuild)' == ''">false</GeneratePackageOnBuild>
+        <GenerateDocumentationFile Condition="'$(GenerateDocumentationFile)' == ''">false</GenerateDocumentationFile>
+
+        <!-- Advanced Feature 1: Documentation Type Detection -->
+        <DocumentationType Condition="'$(DocumentationType)' == '' AND Exists('$(MSBuildProjectDirectory)\docs.json')">Mintlify</DocumentationType>
+        <DocumentationType Condition="'$(DocumentationType)' == '' AND Exists('$(MSBuildProjectDirectory)\docfx.json')">DocFX</DocumentationType>
+        <DocumentationType Condition="'$(DocumentationType)' == '' AND Exists('$(MSBuildProjectDirectory)\mkdocs.yml')">MkDocs</DocumentationType>
+        <DocumentationType Condition="'$(DocumentationType)' == '' AND Exists('$(MSBuildProjectDirectory)\_config.yml')">Jekyll</DocumentationType>
+        <DocumentationType Condition="'$(DocumentationType)' == '' AND Exists('$(MSBuildProjectDirectory)\hugo.toml')">Hugo</DocumentationType>
+        <DocumentationType Condition="'$(DocumentationType)' == ''">Generic</DocumentationType>
+
+        <!-- Output redirection - keep documentation folders clean -->
+        <KeepLocalOutput Condition="'$(KeepLocalOutput)' == ''">false</KeepLocalOutput>
+
+        <!-- Solution name for temp paths -->
+        <_SolutionName Condition="'$(SolutionName)' != ''">$(SolutionName)</_SolutionName>
+        <_SolutionName Condition="'$(SolutionName)' == '' AND '$(SolutionFileName)' != ''">$([System.IO.Path]::GetFileNameWithoutExtension('$(SolutionFileName)'))</_SolutionName>
+        <_SolutionName Condition="'$(_SolutionName)' == ''">Documentation</_SolutionName>
+
+        <!-- Redirect output to temp unless explicitly keeping local -->
+        <BaseIntermediateOutputPath Condition="'$(KeepLocalOutput)' != 'true' AND '$(BaseIntermediateOutputPath)' == ''">$([System.IO.Path]::GetTempPath())$(_SolutionName)\$(MSBuildProjectName)\obj\</BaseIntermediateOutputPath>
+        <BaseOutputPath Condition="'$(KeepLocalOutput)' != 'true' AND '$(BaseOutputPath)' == ''">$([System.IO.Path]::GetTempPath())$(_SolutionName)\$(MSBuildProjectName)\bin\</BaseOutputPath>
+        <IntermediateOutputPath Condition="'$(KeepLocalOutput)' != 'true'">$(BaseIntermediateOutputPath)</IntermediateOutputPath>
+        <OutputPath Condition="'$(KeepLocalOutput)' != 'true'">$(BaseOutputPath)</OutputPath>
+        <MSBuildProjectExtensionsPath Condition="'$(KeepLocalOutput)' != 'true'">$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+    </PropertyGroup>
+
+    <!-- Import the NoTargets SDK props for no-compile behavior -->
+    <Import Project="Sdk.props" Sdk="Microsoft.Build.NoTargets/3.7.56" />
+
+    <!-- Advanced Feature 2: Auto-Include Patterns by Documentation Type -->
+
+    <!-- Common files for all documentation types -->
+    <ItemGroup>
+        <None Include="README.md" Condition="Exists('$(MSBuildProjectDirectory)\README.md')" />
+        <None Include="LICENSE*" />
+        <None Include="CHANGELOG*" />
+        <None Include="**/*.txt" />
+    </ItemGroup>
+
+    <!-- Mintlify-specific files -->
+    <ItemGroup Condition="'$(DocumentationType)' == 'Mintlify'">
+        <None Include="docs.json" />
+        <None Include="**/*.mdz" />
+        <None Include="**/*.mdx" />
+        <None Include="**/*.md" />
+        <None Include="mint.json" />
+        <None Include="api-reference/**/*" />
+        <None Include="conceptual/**/*" />
+        <None Include="overrides/**/*" />
+        <None Include="guides/**/*" />
+        <None Include="logo/**/*" />
+        <None Include="favicon.*" />
+        <None Include="**/*.yml" />
+        <None Include="**/*.yaml" />
+    </ItemGroup>
+
+    <!-- DocFX-specific files -->
+    <ItemGroup Condition="'$(DocumentationType)' == 'DocFX'">
+        <None Include="docfx.json" />
+        <None Include="toc.yml" />
+        <None Include="toc.yaml" />
+        <None Include="**/*.md" />
+        <None Include="**/*.yml" />
+        <None Include="**/*.yaml" />
+        <None Include="articles/**/*" />
+        <None Include="api/**/*" />
+        <None Include="templates/**/*" />
+        <None Include="images/**/*" />
+    </ItemGroup>
+
+    <!-- MkDocs-specific files -->
+    <ItemGroup Condition="'$(DocumentationType)' == 'MkDocs'">
+        <None Include="mkdocs.yml" />
+        <None Include="docs/**/*.md" />
+        <None Include="docs/**/*.py" />
+        <None Include="requirements.txt" />
+        <None Include="overrides/**/*" />
+        <None Include="theme/**/*" />
+    </ItemGroup>
+
+    <!-- Jekyll-specific files -->
+    <ItemGroup Condition="'$(DocumentationType)' == 'Jekyll'">
+        <None Include="_config.yml" />
+        <None Include="_config.yaml" />
+        <None Include="**/*.md" />
+        <None Include="**/*.html" />
+        <None Include="_posts/**/*" />
+        <None Include="_layouts/**/*" />
+        <None Include="_includes/**/*" />
+        <None Include="_sass/**/*" />
+        <None Include="_data/**/*" />
+        <None Include="assets/**/*" />
+        <None Include="Gemfile*" />
+    </ItemGroup>
+
+    <!-- Hugo-specific files -->
+    <ItemGroup Condition="'$(DocumentationType)' == 'Hugo'">
+        <None Include="hugo.toml" />
+        <None Include="hugo.yaml" />
+        <None Include="hugo.json" />
+        <None Include="config.*" />
+        <None Include="content/**/*" />
+        <None Include="layouts/**/*" />
+        <None Include="static/**/*" />
+        <None Include="themes/**/*" />
+        <None Include="archetypes/**/*" />
+        <None Include="data/**/*" />
+        <None Include="i18n/**/*" />
+    </ItemGroup>
+
+    <!-- Generic documentation files (fallback) -->
+    <ItemGroup Condition="'$(DocumentationType)' == 'Generic'">
+        <None Include="**/*.md" />
+        <None Include="**/*.mdx" />
+        <None Include="**/*.rst" />
+        <None Include="**/*.adoc" />
+        <None Include="**/*.asciidoc" />
+        <None Include="**/*.org" />
+        <None Include="**/*.wiki" />
+        <None Include="**/*.textile" />
+        <None Include="**/*.yml" />
+        <None Include="**/*.yaml" />
+        <None Include="**/*.json" />
+        <None Include="**/*.toml" />
+        <None Include="**/*.ini" />
+        <None Include="docs/**/*" />
+        <None Include="documentation/**/*" />
+    </ItemGroup>
+
+    <!-- Common asset files for all documentation types -->
+    <ItemGroup>
+        <None Include="**/*.png" />
+        <None Include="**/*.jpg" />
+        <None Include="**/*.jpeg" />
+        <None Include="**/*.gif" />
+        <None Include="**/*.svg" />
+        <None Include="**/*.webp" />
+        <None Include="**/*.ico" />
+        <None Include="**/*.pdf" />
+        <None Include="**/*.css" />
+        <None Include="**/*.scss" />
+        <None Include="**/*.sass" />
+        <None Include="**/*.less" />
+        <None Include="**/*.js" />
+        <None Include="**/*.ts" />
+        <None Include="**/*.mjs" />
+        <None Include="**/*.woff*" />
+        <None Include="**/*.ttf" />
+        <None Include="**/*.otf" />
+        <None Include="**/*.eot" />
+    </ItemGroup>
+
+    <!-- Exclude common build and system directories -->
+    <ItemGroup>
+        <None Remove="bin/**" />
+        <None Remove="obj/**" />
+        <None Remove=".vs/**" />
+        <None Remove=".vscode/**" />
+        <None Remove="node_modules/**" />
+        <None Remove=".git/**" />
+        <None Remove=".svn/**" />
+        <None Remove="__pycache__/**" />
+        <None Remove="*.tmp" />
+        <None Remove="*.temp" />
+        <None Remove="**/thumbs.db" />
+        <None Remove="**/.DS_Store" />
+        <None Remove="**/*.docsproj" />
+        <None Remove="**/*.docsproj.user" />
+    </ItemGroup>
+
+</Project>

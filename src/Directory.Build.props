@@ -1,0 +1,84 @@
+<Project>
+
+	<!-- Folder layout -->
+	<PropertyGroup>
+		<IncludeReadmeFile Condition="Exists('$(MSBuildProjectDirectory)\readme.md')">true</IncludeReadmeFile>
+
+		<IncludeSource>false</IncludeSource>
+		<IncludeSymbols>false</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<LangVersion>latest</LangVersion>
+		<Configurations>Debug;Release;DEV;BETA;PROD</Configurations>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<Product>EasyAF</Product>
+		<AssemblyVersion>1.0.0.0</AssemblyVersion>
+		<PackageVersion>1.0.0-rc.1</PackageVersion>
+		<Authors>CloudNimble</Authors>
+		<Company>CloudNimble, Inc.</Company>
+		<RpmPackageVendor>CloudNimble</RpmPackageVendor>
+		<Copyright>Copyright © 2025 CloudNimble, Inc. All rights reserved.</Copyright>
+		<NeutralLanguage>en-US</NeutralLanguage>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageReadmeFile Condition="$(IncludeReadmeFile) == 'true'">readme.md</PackageReadmeFile>
+		<!--
+          Suppress a warning about upcoming deprecation of PackageLicenseUrl. When embedding licenses are supported,
+          replace PackageLicenseUrl with PackageLicenseExpression.
+        -->
+		<NoWarn>$(NoWarn);NU5125;NU5048;NU5128;</NoWarn>
+		<!-- Suppress warnings about using SemVer 2.0. -->
+		<NoWarn>$(NoWarn);NU5105</NoWarn>
+
+		<!-- Contact email address for NuGet packages and Linux installers. -->
+		<MaintainerEmail>opensource@nimbleapps.cloud</MaintainerEmail>
+
+		<PackageIcon>cloudnimble-logo.png</PackageIcon>
+		<PackageProjectUrl>https://github.com/CloudNimble/Build.Documentation</PackageProjectUrl>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageTags>msbuild;sdk;documentation;docsproj;docs;markdown;mintlify;docfx;mkdocs</PackageTags>
+		<Serviceable>true</Serviceable>
+
+		<RepositoryRoot>$(MSBuildThisFileDirectory)</RepositoryRoot>
+		<RepositoryUrl>https://github.com/CloudNimble/Build.Documentation</RepositoryUrl>
+		<RepositoryType>GIT</RepositoryType>
+	</PropertyGroup>
+
+	<!-- Compilation options -->
+	<PropertyGroup>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>disable</Nullable>
+
+		<!-- Instructs the compiler to use SHA256 instead of SHA1 when adding file hashes to PDBs. -->
+		<ChecksumAlgorithm>SHA256</ChecksumAlgorithm>
+
+		<!-- Fixes a common error in targets implementing a NoBuild mode. -->
+		<BuildProjectReferences Condition=" '$(NoBuild)' == 'true' ">false</BuildProjectReferences>
+
+		<!-- Suppress warnings about uninstantiated classes. -->
+		<NoWarn>$(NoWarn);CA1812</NoWarn>
+
+		<NoWarn>$(NoWarn);NU1510</NoWarn>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<StandardTestTfms>net10.0;net9.0;net8.0</StandardTestTfms>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<SkipDefaultEditorConfigAsAdditionalFile>true</SkipDefaultEditorConfigAsAdditionalFile>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
+	</PropertyGroup>
+
+	<!-- RWM: Leverage defaults to include standard things in the NuGet package if they are available.-->
+	<ItemGroup>
+		<None Include="$(MSBuildThisFileDirectory)cloudnimble-logo.png" Pack="true" PackagePath="\" Condition="'$(IsTestProject)' != 'true'" />
+		<None Include="readme.md" Pack="true" PackagePath="\" Condition="$(IncludeReadmeFile) == 'true'" />
+	</ItemGroup>
+
+</Project>
