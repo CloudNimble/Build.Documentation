@@ -11,14 +11,14 @@ Add to your `global.json`:
 ```json
 {
   "msbuild-sdks": {
-    "CloudNimble.Build.Documentation": "3.0.0"
+    "CloudNimble.Build.Documentation": "1.0.0"
   }
 }
 ```-->
 ### 1. Create a .docsproj
 
 ```xml
-<Project Sdk="CloudNimble.Build.Documentation/3.0.0">
+<Project Sdk="CloudNimble.Build.Documentation/1.0.0">
   <!-- That's it! Everything is configured automatically -->
 </Project>
 ```
