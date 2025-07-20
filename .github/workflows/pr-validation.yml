@@ -7,7 +7,6 @@ on:
 
 env:
   DOTNET_VERSION: '10.0.x'
-  DOTNET_PREVIEW_VERSION: '10.0.100-preview.6'
   SOLUTION_FILE: 'src/CloudNimble.Build.Documentation.slnx'
 
 jobs:
@@ -28,7 +27,7 @@ jobs:
       run: |
         Write-Host "📥 Installing .NET 10 Preview..."
         Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile "dotnet-install.ps1"
-        ./dotnet-install.ps1 -Version ${{ env.DOTNET_PREVIEW_VERSION }} -InstallDir "$env:ProgramFiles\dotnet"
+        ./dotnet-install.ps1 -Version 10.0 -Channel Preview -InstallDir "$env:ProgramFiles\dotnet"
         echo "$env:ProgramFiles\dotnet" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         dotnet --list-sdks
 

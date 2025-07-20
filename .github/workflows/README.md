@@ -96,7 +96,7 @@ The workflows automatically install .NET 10 preview using:
 
 ```powershell
 Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile "dotnet-install.ps1"
-./dotnet-install.ps1 -Version 10.0.100-preview.6 -InstallDir "$env:ProgramFiles\dotnet"
+./dotnet-install.ps1 -Version 10.0 -Channel Preview -InstallDir "$env:ProgramFiles\dotnet"
 ```
 
 **Benefits:**
@@ -153,7 +153,6 @@ Both workflows use consistent environment variables:
 ```yaml
 env:
   DOTNET_VERSION: '10.0.x'
-  DOTNET_PREVIEW_VERSION: '10.0.100-preview.6'
   SOLUTION_FILE: 'src/CloudNimble.Build.Documentation.slnx'
   PROJECT_FILE: 'src/CloudNimble.Build.Documentation/CloudNimble.Build.Documentation.csproj'
 ```
@@ -162,9 +161,9 @@ env:
 
 ### .NET Installation Issues
 If .NET 10 preview installation fails:
-1. Check if the preview version is still available
-2. Update `DOTNET_PREVIEW_VERSION` environment variable
-3. Verify the installation script URL is accessible
+1. Check if the Preview channel is available
+2. Verify the installation script URL is accessible
+3. Try using a specific version number if the channel approach fails
 
 ### Package Already Exists
 The workflow uses `--skip-duplicate` to handle cases where a package version already exists on NuGet.
