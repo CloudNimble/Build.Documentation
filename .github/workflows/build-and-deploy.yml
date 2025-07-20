@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [ main, dev ]
 
+permissions:
+  contents: read
+  actions: write
+  variables: write
+
 env:
   DOTNET_VERSION: '10.0.x'
   SOLUTION_FILE: 'src/CloudNimble.Build.Documentation.slnx'
