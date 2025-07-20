@@ -9,7 +9,6 @@ on:
 permissions:
   contents: read
   actions: write
-  variables: write
 
 env:
   DOTNET_VERSION: '10.0.x'
@@ -226,7 +225,7 @@ jobs:
       if: steps.version.outputs.BRANCH_TYPE == 'dev' && steps.nuget_push.outputs.DEPLOYMENT_SUCCESS == 'true'
       shell: pwsh
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
       run: |
         $nextSuffix = "${{ steps.version.outputs.NEXT_PREVIEW_SUFFIX }}"
         Write-Host "🔄 Updating VERSION_PREVIEW_SUFFIX to $nextSuffix"
