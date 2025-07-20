@@ -47,8 +47,9 @@ Set these in your repository settings under Settings → Secrets and variables �
 
 | Variable | Description | Default | Example |
 |----------|-------------|---------|---------|
-| `MAJOR_VERSION` | Major version number | `1` | `2` |
-| `MINOR_VERSION` | Minor version number | `0` | `1` |
+| `VERSION_MAJOR` | Major version number | `1` | `2` |
+| `VERSION_MINOR` | Minor version number | `0` | `1` |
+| `VERSION_PREVIEW_SUFFIX` | Preview build counter (auto-updated by workflow) | `0` | `5` |
 
 ### Repository Secrets
 
@@ -62,33 +63,33 @@ Set these in your repository settings under Settings → Secrets and variables �
 
 ### Main Branch (Production)
 ```
-{MAJOR_VERSION}.{MINOR_VERSION}.{BUILD_NUMBER}
+{VERSION_MAJOR}.{VERSION_MINOR}.{PATCH_VERSION}
 ```
-**Example:** `1.0.42`
+**Example:** `1.0.5`
 
-**Usage:** Production releases with auto-incrementing build numbers
+**Usage:** Production releases with patch versions determined by examining Git tags
 
 ### Dev Branch (Preview Builds)
 ```
-{MAJOR_VERSION}.{MINOR_VERSION}.{BUILD_NUMBER}-preview.{RUN_ATTEMPT}
+{VERSION_MAJOR}.{VERSION_MINOR}.0-preview.{VERSION_PREVIEW_SUFFIX}
 ```
-**Example:** `1.0.42-preview.1`
+**Example:** `1.0.0-preview.3`
 
 **Usage:** Development previews for testing and staging
 
 ### Feature/Other Branches (CI Builds)
 ```
-{MAJOR_VERSION}.{MINOR_VERSION}.0-CI-{YYYYMMDD}-{HHMMSS}
+{VERSION_MAJOR}.{VERSION_MINOR}.0-CI-{YYYYMMDD}-{HHMMSS}
 ```
 **Example:** `1.0.0-CI-20250716-193214`
 
 **Usage:** CI builds for feature branches and pull requests
 
 ### Variable Definitions
-- `BUILD_NUMBER` = Auto-incrementing build number that resets to 0 when major/minor versions change
+- `PATCH_VERSION` = For main branch, determined by examining existing Git tags and incrementing
+- `VERSION_PREVIEW_SUFFIX` = Auto-incrementing preview counter, updated after successful dev deployments
 - `YYYYMMDD` = UTC date (e.g., `20250716`)
 - `HHMMSS` = UTC time in 24-hour format (e.g., `193214` = 7:32:14 PM)
-- `RUN_ATTEMPT` = Attempt number for the current workflow run
 
 ## .NET 10 Preview Setup
 
@@ -120,31 +121,32 @@ Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile "dotnet-
 
 ### Bumping Versions
 
-1. **Major Version:** Update `MAJOR_VERSION` repository variable (resets build number to 0)
-2. **Minor Version:** Update `MINOR_VERSION` repository variable (resets build number to 0)
-3. **Patch/Build:** Automatically handled by workflow runs (increments for each major.minor)
-
-### Version Reset Logic
-
-The build number automatically resets to 0 when major or minor versions change:
-- When you bump from `1.0.x` to `1.1.x`, build numbers start at `1.1.0`
-- When you bump from `1.x.x` to `2.x.x`, build numbers start at `2.0.0`
-- Build numbers are tracked by examining existing Git tags for each major.minor combination
+1. **Major Version:** Update `VERSION_MAJOR` repository variable (resets preview suffix when used)
+2. **Minor Version:** Update `VERSION_MINOR` repository variable (resets preview suffix when used)
+3. **Preview Builds:** Automatically handled by `VERSION_PREVIEW_SUFFIX` variable (auto-updated after successful dev deployments)
+4. **Patch Versions:** Automatically handled by examining Git tags on main branch
 
 ### Version Strategy Examples
 
 **Version Flow Example:**
 ```
-1.0.0 → 1.0.1 → 1.0.2 → 1.1.0 → 1.1.1 → 2.0.0 → 2.0.1
+Main: 1.0.0 → 1.0.1 → 1.0.2 → 1.1.0 → 1.1.1 → 2.0.0
+Dev:  1.0.0-preview.1 → 1.0.0-preview.2 → 1.0.0-preview.3
 ```
 
-Given `MAJOR_VERSION=2` and `MINOR_VERSION=1`, and assuming the highest existing tag is `v2.1.5`:
+Given `VERSION_MAJOR=1`, `VERSION_MINOR=0`, `VERSION_PREVIEW_SUFFIX=2`, and existing main tag `v1.0.1`:
 
 | Branch Type | Next Build Result | When to Use |
 |-------------|------------------|-------------|
-| `main` | `2.1.6` | Production releases |
-| `dev` | `2.1.6-preview.1` | Development testing |
-| `feature/new-feature` | `2.1.0-CI-20250716-193214` | Feature development |
+| `main` | `1.0.2` | Production releases (increments from existing tags) |
+| `dev` | `1.0.0-preview.3` | Development testing (increments preview suffix) |
+| `feature/new-feature` | `1.0.0-CI-20250716-193214` | Feature development |
+
+### Automatic Variable Updates
+
+- **`VERSION_PREVIEW_SUFFIX`**: Automatically incremented and updated after successful dev branch deployments
+- **Git Tags**: Created automatically for main branch releases (e.g., `v1.0.2`)
+- **Error Handling**: Deployment failures (bad API key, version conflicts) are detected and reported
 
 ## Workflow Environment Variables
 
@@ -166,20 +168,32 @@ If .NET 10 preview installation fails:
 3. Try using a specific version number with `-Version` parameter if needed
 
 ### Package Already Exists
-The workflow uses `--skip-duplicate` to handle cases where a package version already exists on NuGet.
+The workflow uses `--skip-duplicate` to handle cases where a package version already exists on NuGet. This is treated as a warning, not a failure.
 
-### Version Conflicts
-If you need to force a new version:
-1. Update the repository variables (`MAJOR_VERSION`/`MINOR_VERSION`)
-2. Manually trigger a workflow run
-3. Create a new commit to trigger the build
-4. For CI builds, the timestamp ensures automatic uniqueness
+### Deployment Error Detection
+The workflow automatically detects and handles various deployment failures:
+
+- **Authentication Errors (403/Unauthorized)**: Bad API key or expired token
+- **Version Conflicts (409)**: Package version already exists (treated as warning with `--skip-duplicate`)
+- **General Errors**: Other push failures are captured and reported
 
 ### Missing Secrets
 If deployment fails with authentication errors:
 1. Verify `NUGET_API_KEY` secret is configured
 2. Ensure the API key has package publishing permissions
 3. Check if the API key has expired
+
+### Preview Suffix Issues
+If `VERSION_PREVIEW_SUFFIX` updates fail:
+1. Check that `GITHUB_TOKEN` has repository write permissions
+2. Verify the variable exists in repository settings
+3. The workflow continues even if this update fails (non-critical)
+
+### Version Conflicts
+If you need to force a new version:
+1. Update the repository variables (`VERSION_MAJOR`/`VERSION_MINOR`)
+2. For preview builds, manually reset `VERSION_PREVIEW_SUFFIX` to `0`
+3. For CI builds, the timestamp ensures automatic uniqueness
 
 ### Windows-Specific Issues
 Since all jobs run on Windows:
