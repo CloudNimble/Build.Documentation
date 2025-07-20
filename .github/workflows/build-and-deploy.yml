@@ -60,7 +60,8 @@ jobs:
           
           $currentMajorMinor = "$majorVersion.$minorVersion"
           $tags = git tag -l "v$currentMajorMinor.*" --sort=-version:refname
-          Write-Host "📋 Found tags for $currentMajorMinor: $($tags -join ', ')"
+          $tagList = $tags -join ', '
+          Write-Host "📋 Found tags for $currentMajorMinor`: $tagList"
           
           $patchVersion = 0
           if ($tags -and $tags.Count -gt 0) {
