@@ -25,9 +25,9 @@ jobs:
       shell: pwsh
       run: |
         Write-Host "📥 Installing .NET 10 Preview..."
-        # Download and install .NET 10 preview using the Preview channel
+        # Download and install .NET 10 preview using Channel 10.0 and Quality preview
         Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile "dotnet-install.ps1"
-        ./dotnet-install.ps1 -Version 10.0 -Channel Preview -InstallDir "$env:ProgramFiles\dotnet"
+        ./dotnet-install.ps1 -Channel 10.0 -Quality preview -InstallDir "$env:ProgramFiles\dotnet"
         
         # Add to PATH for this job
         echo "$env:ProgramFiles\dotnet" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
@@ -135,7 +135,7 @@ jobs:
       run: |
         Write-Host "📥 Installing .NET 10 Preview..."
         Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile "dotnet-install.ps1"
-        ./dotnet-install.ps1 -Version 10.0 -Channel Preview -InstallDir "$env:ProgramFiles\dotnet"
+        ./dotnet-install.ps1 -Channel 10.0 -Quality preview -InstallDir "$env:ProgramFiles\dotnet"
         echo "$env:ProgramFiles\dotnet" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
     - name: Push to NuGet

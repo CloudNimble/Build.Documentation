@@ -96,7 +96,7 @@ The workflows automatically install .NET 10 preview using:
 
 ```powershell
 Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile "dotnet-install.ps1"
-./dotnet-install.ps1 -Version 10.0 -Channel Preview -InstallDir "$env:ProgramFiles\dotnet"
+./dotnet-install.ps1 -Channel 10.0 -Quality preview -InstallDir "$env:ProgramFiles\dotnet"
 ```
 
 **Benefits:**
@@ -161,9 +161,9 @@ env:
 
 ### .NET Installation Issues
 If .NET 10 preview installation fails:
-1. Check if the Preview channel is available
+1. Check if Channel 10.0 with Quality preview is available
 2. Verify the installation script URL is accessible
-3. Try using a specific version number if the channel approach fails
+3. Try using a specific version number with `-Version` parameter if needed
 
 ### Package Already Exists
 The workflow uses `--skip-duplicate` to handle cases where a package version already exists on NuGet.
