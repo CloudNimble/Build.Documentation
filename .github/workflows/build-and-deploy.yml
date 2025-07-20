@@ -1,0 +1,200 @@
+name: Build and Deploy to NuGet
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  DOTNET_PREVIEW_VERSION: '10.0.100-preview.6'
+  SOLUTION_FILE: 'src/CloudNimble.Build.Documentation.slnx'
+  PROJECT_FILE: 'src/CloudNimble.Build.Documentation/CloudNimble.Build.Documentation.csproj'
+  
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for versioning
+
+    - name: Install .NET 10 Preview
+      shell: pwsh
+      run: |
+        Write-Host "📥 Installing .NET 10 Preview..."
+        # Download and install .NET 10 preview
+        Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile "dotnet-install.ps1"
+        ./dotnet-install.ps1 -Version ${{ env.DOTNET_PREVIEW_VERSION }} -InstallDir "$env:ProgramFiles\dotnet"
+        
+        # Add to PATH for this job
+        echo "$env:ProgramFiles\dotnet" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        
+        # Verify installation
+        dotnet --list-sdks
+
+    - name: Get version variables
+      id: version
+      shell: pwsh
+      run: |
+        # Get major and minor from repository variables
+        $majorVersion = "${{ vars.MAJOR_VERSION }}"
+        if ([string]::IsNullOrEmpty($majorVersion)) { $majorVersion = "1" }
+        
+        $minorVersion = "${{ vars.MINOR_VERSION }}"
+        if ([string]::IsNullOrEmpty($minorVersion)) { $minorVersion = "0" }
+        
+        # Calculate build number that resets when major/minor changes
+        $currentMajorMinor = "$majorVersion.$minorVersion"
+        $runNumber = [int]"${{ github.run_number }}"
+        
+        # Get all existing tags to find the highest build number for this major.minor
+        try {
+          $tags = git tag -l "v$currentMajorMinor.*" --sort=-version:refname
+          if ($tags) {
+            # Extract the highest build number for this major.minor
+            $highestBuild = 0
+            foreach ($tag in $tags) {
+              if ($tag -match "^v$majorVersion\.$minorVersion\.(\d+)(-.*)?$") {
+                $buildNum = [int]$matches[1]
+                if ($buildNum -gt $highestBuild) { $highestBuild = $buildNum }
+              }
+            }
+            $buildNumber = $highestBuild + 1
+          } else {
+            # No existing tags for this major.minor, start at 0
+            $buildNumber = 0
+          }
+        } catch {
+          # If git commands fail (e.g., no tags exist), start at 0
+          Write-Host "⚠️ No existing tags found, starting build number at 0"
+          $buildNumber = 0
+        }
+        
+        Write-Host "🔢 Current major.minor: $currentMajorMinor, Build number: $buildNumber"
+        
+        # Determine version based on branch
+        $ref = "${{ github.ref }}"
+        if ($ref -eq "refs/heads/main") {
+          # Main branch: use standard SemVer (e.g., 1.0.0)
+          $version = "$majorVersion.$minorVersion.$buildNumber"
+        }
+        elseif ($ref -eq "refs/heads/dev") {
+          # Dev branch: use preview versioning (e.g., 1.0.0-preview.1)
+          $version = "$majorVersion.$minorVersion.$buildNumber-preview.${{ github.run_attempt }}"
+        }
+        else {
+          # Other branches (features/PRs): use CI versioning (e.g., 1.0.0-CI-20250716-193214)
+          $timestamp = Get-Date -Format "yyyyMMdd-HHmmss" -AsUTC
+          $version = "$majorVersion.$minorVersion.0-CI-$timestamp"
+        }
+        
+        # Output variables
+        echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+        echo "MAJOR_VERSION=$majorVersion" >> $env:GITHUB_OUTPUT
+        echo "MINOR_VERSION=$minorVersion" >> $env:GITHUB_OUTPUT
+        echo "BUILD_NUMBER=$buildNumber" >> $env:GITHUB_OUTPUT
+        
+        Write-Host "📦 Version: $version"
+
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.SOLUTION_FILE }}
+
+    - name: Build
+      run: dotnet build ${{ env.SOLUTION_FILE }} --configuration Release --no-restore /p:Version=${{ steps.version.outputs.VERSION }}
+
+    - name: Test
+      run: dotnet test ${{ env.SOLUTION_FILE }} --configuration Release --no-build --verbosity normal
+
+    - name: Pack
+      run: dotnet pack ${{ env.SOLUTION_FILE }} --configuration Release --no-build --output ./artifacts /p:PackageVersion=${{ steps.version.outputs.VERSION }}
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-packages
+        path: ./artifacts/*.nupkg
+        retention-days: 7
+
+  deploy:
+    needs: build
+    runs-on: windows-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
+    
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: nuget-packages
+        path: ./artifacts
+
+    - name: Install .NET 10 Preview
+      shell: pwsh
+      run: |
+        Write-Host "📥 Installing .NET 10 Preview..."
+        Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile "dotnet-install.ps1"
+        ./dotnet-install.ps1 -Version ${{ env.DOTNET_PREVIEW_VERSION }} -InstallDir "$env:ProgramFiles\dotnet"
+        echo "$env:ProgramFiles\dotnet" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+    - name: Push to NuGet
+      shell: pwsh
+      run: |
+        Get-ChildItem ./artifacts/*.nupkg | ForEach-Object {
+          Write-Host "📤 Pushing $($_.Name) to NuGet..."
+          dotnet nuget push $_.FullName `
+            --api-key ${{ secrets.NUGET_API_KEY }} `
+            --source https://api.nuget.org/v3/index.json `
+            --skip-duplicate
+        }
+
+  create-release:
+    needs: [build, deploy]
+    runs-on: windows-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: nuget-packages
+        path: ./artifacts
+
+    - name: Get version from build
+      id: version
+      shell: pwsh
+      run: |
+        # Extract version from package name
+        $packageFile = Get-ChildItem ./artifacts/*.nupkg | Select-Object -First 1
+        $version = $packageFile.Name -replace 'CloudNimble\.Build\.Documentation\.(.+?)\.nupkg', '$1'
+        echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+        Write-Host "📦 Creating release for version: $version"
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ steps.version.outputs.VERSION }}
+        name: Release v${{ steps.version.outputs.VERSION }}
+        body: |
+          ## CloudNimble.Build.Documentation v${{ steps.version.outputs.VERSION }}
+          
+          ### 📦 NuGet Package
+          - [CloudNimble.Build.Documentation](https://www.nuget.org/packages/CloudNimble.Build.Documentation/${{ steps.version.outputs.VERSION }})
+          
+          ### 🚀 What's Changed
+          See [full changelog](https://github.com/${{ github.repository }}/compare/v${{ steps.version.outputs.PREVIOUS_VERSION }}...v${{ steps.version.outputs.VERSION }})
+          
+          ### 📥 Installation
+          ```xml
+          <Project Sdk="CloudNimble.Build.Documentation/${{ steps.version.outputs.VERSION }}">
+            <!-- That's it! -->
+          </Project>
+          ```
+        files: ./artifacts/*.nupkg
+        draft: false
+        prerelease: false
