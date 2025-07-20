@@ -7,16 +7,15 @@ An MSBuild SDK that enables documentation projects (`.docsproj`) in .NET solutio
 ### 1. Install the SDK
 
 Add to your `global.json`:
-
+<!--
 ```json
 {
   "msbuild-sdks": {
     "CloudNimble.Build.Documentation": "3.0.0"
   }
 }
-```
-
-### 2. Create a .docsproj
+```-->
+### 1. Create a .docsproj
 
 ```xml
 <Project Sdk="CloudNimble.Build.Documentation/3.0.0">
@@ -24,7 +23,7 @@ Add to your `global.json`:
 </Project>
 ```
 
-### 3. Add to Your Solution
+### 2. Add to Your Solution
 
 For .slnx files:
 ```xml

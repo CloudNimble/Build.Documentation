@@ -10,7 +10,7 @@
         <Project Path="CloudNimble.Build.Documentation/CloudNimble.Build.Documentation.csproj" />
     </Folder>
     <Folder Name="/Solution Items/">
-        <File Path="README.md" />
+        <File Path="../README.md" />
         <File Path="cloudnimble-logo.png" />
         <File Path="Directory.Build.props" />
         <File Path="global.json" />
