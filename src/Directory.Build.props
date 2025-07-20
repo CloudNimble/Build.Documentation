@@ -3,6 +3,8 @@
 	<!-- Folder layout -->
 	<PropertyGroup>
 		<IncludeReadmeFile Condition="Exists('$(MSBuildProjectDirectory)\readme.md')">true</IncludeReadmeFile>
+		<!-- For CloudNimble.Build.Documentation, use the root README -->
+		<IncludeReadmeFile Condition="'$(MSBuildProjectName)' == 'CloudNimble.Build.Documentation' AND Exists('$(MSBuildThisFileDirectory)..\README.md')">true</IncludeReadmeFile>
 
 		<IncludeSource>false</IncludeSource>
 		<IncludeSymbols>false</IncludeSymbols>
@@ -78,7 +80,9 @@
 	<!-- RWM: Leverage defaults to include standard things in the NuGet package if they are available.-->
 	<ItemGroup>
 		<None Include="$(MSBuildThisFileDirectory)cloudnimble-logo.png" Pack="true" PackagePath="\" Condition="'$(IsTestProject)' != 'true'" />
-		<None Include="readme.md" Pack="true" PackagePath="\" Condition="$(IncludeReadmeFile) == 'true'" />
+		<None Include="readme.md" Pack="true" PackagePath="\" Condition="$(IncludeReadmeFile) == 'true' AND '$(MSBuildProjectName)' != 'CloudNimble.Build.Documentation'" />
+		<!-- For CloudNimble.Build.Documentation, use the root README -->
+		<None Include="$(MSBuildThisFileDirectory)..\README.md" Pack="true" PackagePath="\" Condition="'$(MSBuildProjectName)' == 'CloudNimble.Build.Documentation' AND $(IncludeReadmeFile) == 'true'" />
 	</ItemGroup>
 
 </Project>
