@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.Build.NoTargets/3.7.56">
+<Project Sdk="Microsoft.Build.NoTargets/3.7.0">
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
@@ -30,7 +30,7 @@
 
 	<ItemGroup>
 		<!-- Explicitly include Microsoft.Build.NoTargets as a dependency -->
-		<PackageReference Include="Microsoft.Build.NoTargets" Version="3.7.56" 
+		<PackageReference Include="Microsoft.Build.NoTargets" Version="3.7.0" 
 		                  PrivateAssets="none" 
 		                  GeneratePathProperty="true" />
 	</ItemGroup>

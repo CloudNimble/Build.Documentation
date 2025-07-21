@@ -55,7 +55,7 @@
 
     <!-- Import the NoTargets SDK props for no-compile behavior -->
     <Import Project="$(PkgMicrosoft_Build_NoTargets)\Sdk\Sdk.props" Condition="'$(PkgMicrosoft_Build_NoTargets)' != ''" />
-    <Import Project="Sdk.props" Sdk="Microsoft.Build.NoTargets/3.7.56" Condition="'$(PkgMicrosoft_Build_NoTargets)' == ''" />
+    <Import Project="Sdk.props" Sdk="Microsoft.Build.NoTargets/3.7.0" Condition="'$(PkgMicrosoft_Build_NoTargets)' == ''" />
 
     <!-- Advanced Feature 2: Auto-Include Patterns by Documentation Type -->
 
