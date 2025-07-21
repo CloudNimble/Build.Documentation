@@ -24,7 +24,7 @@
 		<Copyright>Copyright © 2025 CloudNimble, Inc. All rights reserved.</Copyright>
 		<NeutralLanguage>en-US</NeutralLanguage>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageReadmeFile Condition="$(IncludeReadmeFile) == 'true'">readme.md</PackageReadmeFile>
+		<PackageReadmeFile Condition="$(IncludeReadmeFile) == 'true'">README.md</PackageReadmeFile>
 		<!--
           Suppress a warning about upcoming deprecation of PackageLicenseUrl. When embedding licenses are supported,
           replace PackageLicenseUrl with PackageLicenseExpression.
