@@ -28,10 +28,21 @@
 		<None Include="build\**" Pack="true" PackagePath="build" />
 	</ItemGroup>
 
+	<!-- Copy Microsoft.Build.NoTargets SDK files into our package -->
+	<Target Name="IncludeNoTargetsSDK" BeforeTargets="GenerateNuspec">
+		<ItemGroup>
+			<!-- Include the Microsoft.Build.NoTargets SDK files in our package -->
+			<None Include="$(PkgMicrosoft_Build_NoTargets)\Sdk\**" 
+			      Pack="true" 
+			      PackagePath="Sdk\NoTargets" 
+			      Condition="'$(PkgMicrosoft_Build_NoTargets)' != ''" />
+		</ItemGroup>
+	</Target>
+
 	<ItemGroup>
-		<!-- Explicitly include Microsoft.Build.NoTargets as a dependency -->
+		<!-- Include Microsoft.Build.NoTargets for bundling its SDK files -->
 		<PackageReference Include="Microsoft.Build.NoTargets" Version="3.7.0" 
-		                  PrivateAssets="none" 
+		                  PrivateAssets="all" 
 		                  GeneratePathProperty="true" />
 	</ItemGroup>
 

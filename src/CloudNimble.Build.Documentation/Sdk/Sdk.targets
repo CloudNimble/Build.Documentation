@@ -7,8 +7,8 @@
        ============================================================================ -->
 
     <!-- Import the NoTargets SDK targets for no-compile behavior -->
-    <Import Project="$(PkgMicrosoft_Build_NoTargets)\Sdk\Sdk.targets" Condition="'$(PkgMicrosoft_Build_NoTargets)' != ''" />
-    <Import Project="Sdk.targets" Sdk="Microsoft.Build.NoTargets/3.7.0" Condition="'$(PkgMicrosoft_Build_NoTargets)' == ''" />
+    <!-- NoTargets SDK files are bundled in the Sdk/NoTargets folder -->
+    <Import Project="$(MSBuildThisFileDirectory)NoTargets\Sdk.targets" />
 
     <!-- Documentation project validation and information -->
     <Target Name="ValidateDocumentationProject" AfterTargets="Build">

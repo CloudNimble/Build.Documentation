@@ -54,8 +54,8 @@
     </PropertyGroup>
 
     <!-- Import the NoTargets SDK props for no-compile behavior -->
-    <Import Project="$(PkgMicrosoft_Build_NoTargets)\Sdk\Sdk.props" Condition="'$(PkgMicrosoft_Build_NoTargets)' != ''" />
-    <Import Project="Sdk.props" Sdk="Microsoft.Build.NoTargets/3.7.0" Condition="'$(PkgMicrosoft_Build_NoTargets)' == ''" />
+    <!-- NoTargets SDK files are bundled in the Sdk/NoTargets folder -->
+    <Import Project="$(MSBuildThisFileDirectory)NoTargets\Sdk.props" />
 
     <!-- Advanced Feature 2: Auto-Include Patterns by Documentation Type -->
 
