@@ -28,14 +28,32 @@
 		<None Include="build\**" Pack="true" PackagePath="build" />
 	</ItemGroup>
 
-	<!-- Copy Microsoft.Build.NoTargets SDK files into our package -->
-	<Target Name="IncludeNoTargetsSDK" BeforeTargets="GenerateNuspec">
+	<!-- Copy Microsoft.Build.NoTargets SDK files during build -->
+	<Target Name="CopyNoTargetsSDK" AfterTargets="Build">
+		<PropertyGroup>
+			<NoTargetsSourcePath>$(PkgMicrosoft_Build_NoTargets)\Sdk</NoTargetsSourcePath>
+			<NoTargetsDestPath>$(MSBuildProjectDirectory)\Sdk\NoTargets</NoTargetsDestPath>
+		</PropertyGroup>
+		
+		<Message Text="Copying NoTargets SDK from $(NoTargetsSourcePath) to $(NoTargetsDestPath)" Importance="high" />
+		
+		<!-- Create the directory -->
+		<MakeDir Directories="$(NoTargetsDestPath)" />
+		
+		<!-- Copy the files -->
 		<ItemGroup>
-			<!-- Include the Microsoft.Build.NoTargets SDK files in our package -->
-			<None Include="$(PkgMicrosoft_Build_NoTargets)\Sdk\**" 
-			      Pack="true" 
-			      PackagePath="Sdk\NoTargets" 
-			      Condition="'$(PkgMicrosoft_Build_NoTargets)' != ''" />
+			<NoTargetsFiles Include="$(NoTargetsSourcePath)\**\*" />
+		</ItemGroup>
+		
+		<Copy SourceFiles="@(NoTargetsFiles)"
+		      DestinationFiles="@(NoTargetsFiles->'$(NoTargetsDestPath)\%(RecursiveDir)%(Filename)%(Extension)')"
+		      SkipUnchangedFiles="true" />
+	</Target>
+	
+	<!-- Include the NoTargets files in the package after they're copied -->
+	<Target Name="IncludeNoTargetsInPackage" DependsOnTargets="CopyNoTargetsSDK" BeforeTargets="GenerateNuspec">
+		<ItemGroup>
+			<None Include="Sdk\NoTargets\**" Pack="true" PackagePath="Sdk\NoTargets" />
 		</ItemGroup>
 	</Target>
 
